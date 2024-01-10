@@ -19,8 +19,10 @@ sprite_group = pygame.sprite.Group()
 image_wall = pygame.image.load("sprites/wall.png").convert_alpha()
 image_blue_agent = pygame.image.load("sprites/blue_agent.png").convert_alpha()
 image_red_agent = pygame.image.load("sprites/red_agent.png").convert_alpha()
-image_blue_agent_f = pygame.image.load("sprites/blue_agent_f.png").convert_alpha()
-image_red_agent_f = pygame.image.load("sprites/red_agent_f.png").convert_alpha()
+image_blue_agent_f = pygame.image.load(
+    "sprites/blue_agent_f.png").convert_alpha()
+image_red_agent_f = pygame.image.load(
+    "sprites/red_agent_f.png").convert_alpha()
 image_blue_flag = pygame.image.load("sprites/blue_flag.png").convert_alpha()
 image_red_flag = pygame.image.load("sprites/red_flag.png").convert_alpha()
 image_bullet = pygame.image.load("sprites/bullet.png").convert_alpha()
@@ -56,7 +58,7 @@ def handle_pygame(world):
                 sprite = Sprite(image_red_flag)
             elif world.worldmap_buffer[y][x] == ASCII_TILES["bullet"]:
                 sprite = Sprite(image_bullet)
-            
+
             if sprite:
                 sprite.rect.y = y * 32
                 sprite.rect.x = x * 32
@@ -79,14 +81,15 @@ def main():
         else:
             world.update_bullets()
         world.iter()
-        #world.ascii_display()
+        world.ascii_display()
         handle_pygame(world)
-    
+
     world.terminate_agents()
-    
+
     if world.win == "tied":
         print("\ntied!\n")
     else:
         print(f"\n{world.win} won!\n")
+
 
 main()
