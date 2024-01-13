@@ -5,15 +5,35 @@ from config import *
 
 class Agent:
     knowledge_base = {
-        'map': [['#' if row == 0 or row == HEIGHT - 1 or
-                 col == 0 or col == WIDTH - 1 else '/'
+        "map": [["#" if row == 0 or row == HEIGHT - 1 or
+                 col == 0 or col == WIDTH - 1 else "/"
                  for col in range(WIDTH)]
                 for row in range(HEIGHT)],
+        "enemy_flag_positions": [],
+        "home_flag_positions": []
     }
 
     def __init__(self, color, index):
         self.color = color  # "blue" or "red"
         self.index = index  # 0, 1, or 2
+        self.ENEMY_AGENT_COLOR = ASCII_TILES["red_agent"] if self.color == "blue" else ASCII_TILES["blue_agent"]
+        self.ENEMY_FLAG_TILE = ASCII_TILES["red_flag"] if self.color == "blue" else ASCII_TILES["blue_flag"]
+        self.HOME_FLAG_TILE = ASCII_TILES["blue_flag"] if self.color == "blue" else ASCII_TILES["red_flag"]
+
+    def update_flag_positions(self):
+        for row in range(len(Agent.knowledge_base["map"])):
+            for col in range(len(Agent.knowledge_base["map"][0])):
+                tile = Agent.knowledge_base["map"][row][col]
+                if tile == self.HOME_FLAG_TILE:
+                    if not Agent.knowledge_base["home_flag_positions"]:
+                        Agent.knowledge_base["home_flag_positions"].append((col, row))
+                    elif Agent.knowledge_base["home_flag_positions"][-1] != (col, row):
+                        continue
+                if tile == self.ENEMY_FLAG_TILE:
+                    if not Agent.knowledge_base["enemy_flag_positions"]:
+                        Agent.knowledge_base["enemy_flag_positions"].append((col, row))
+                    elif Agent.knowledge_base["enemy_flag_positions"][-1] != (col, row):
+                        continue
 
     def update_map(self, visible_world, position):
         if visible_world:
@@ -50,9 +70,11 @@ class Agent:
         for row in range(len(Agent.knowledge_base["map"])):
             print(" " + " ".join(Agent.knowledge_base["map"][row]) + " ")
 
+    def update_knowledge_base(self, visible_world, position, holding_flag):
+        self.update_map(visible_world, position)
+        self.update_flag_positions()
+
     def detect_nearby_enemies(self, visible_world):
-        enemy_with_flag = ASCII_TILES["red_agent_f"] if self.color == "blue" else ASCII_TILES["blue_agent_f"]
-        enemy = ASCII_TILES["red_agent"] if self.color == "blue" else ASCII_TILES["blue_agent"]
         enemies = []
 
         vertical_direction = [tile[4] for row, tile in enumerate(visible_world) if row != 4]
@@ -62,35 +84,32 @@ class Agent:
         right_direction = visible_world[4][5:]
 
         for position, tile in enumerate(up_direction):
-            if tile in [enemy_with_flag, enemy]:
-                priority = 1 if tile == enemy_with_flag else 0
+            if tile in [self.ENEMY_AGENT_COLOR, self.ENEMY_AGENT_COLOR.upper()]:
+                priority = 1 if tile == self.ENEMY_AGENT_COLOR.upper() else 0
                 distance = position + 1
                 enemies.append({"priority": priority, "distance": distance, "direction": "up"})
 
         for position, tile in enumerate(down_direction):
-            if tile in [enemy_with_flag, enemy]:
-                priority = 1 if tile == enemy_with_flag else 0
+            if tile in [self.ENEMY_AGENT_COLOR, self.ENEMY_AGENT_COLOR.upper()]:
+                priority = 1 if tile == self.ENEMY_AGENT_COLOR.upper() else 0
                 distance = position + 1
                 enemies.append({"priority": priority, "distance": distance, "direction": "down"})
 
         for position, tile in enumerate(left_direction):
-            if tile in [enemy_with_flag, enemy]:
-                priority = 1 if tile == enemy_with_flag else 0
+            if tile in [self.ENEMY_AGENT_COLOR, self.ENEMY_AGENT_COLOR.upper()]:
+                priority = 1 if tile == self.ENEMY_AGENT_COLOR.upper() else 0
                 distance = position + 1
                 enemies.append({"priority": priority, "distance": distance, "direction": "left"})
 
         for position, tile in enumerate(right_direction):
-            if tile in [enemy_with_flag, enemy]:
-                priority = 1 if tile == enemy_with_flag else 0
+            if tile in [self.ENEMY_AGENT_COLOR, self.ENEMY_AGENT_COLOR.upper()]:
+                priority = 1 if tile == self.ENEMY_AGENT_COLOR.upper() else 0
                 distance = position + 1
                 enemies.append({"priority": priority, "distance": distance, "direction": "right"})
 
         sorted_enemies = sorted(enemies, key=lambda x: (-x["priority"], x["distance"]))
 
         return sorted_enemies
-
-    def update_knowledge_base(self, visible_world, position, holding_flag):
-        self.update_map(visible_world, position)
 
     def update(self, visible_world, position, can_shoot, holding_flag):
 
@@ -102,6 +121,7 @@ class Agent:
                 print(" " + " ".join(row))
             self.update_knowledge_base(visible_world, position, holding_flag)
             self.display_map()
+            print(Agent.knowledge_base)
 
         nearby_enemies = self.detect_nearby_enemies(visible_world)
 
