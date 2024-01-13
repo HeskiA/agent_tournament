@@ -43,7 +43,7 @@ class Agent:
 
         if can_shoot and random.random() > 0.5:
             # action = "shoot"
-            action = "move"
+            action = "move" # testing purposes
         else:
             action = "move"
 

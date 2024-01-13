@@ -227,7 +227,7 @@ class Agent:
                     if len(path) > 1:
                         next_position = path.pop(1)
                         direction = self.convert_position_to_direction(agent_position, next_position)
-                # General agent logic
+                # General agent logic, implement logic to explore tiles to find enemy flag position faster
                 else:
                     if self.color == "blue":
                         preferred_direction = "right"
