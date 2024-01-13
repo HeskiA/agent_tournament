@@ -74,7 +74,7 @@ class Agent:
         for row in range(len(Agent.knowledge_base["map"])):
             print(" " + " ".join(Agent.knowledge_base["map"][row]) + " ")
 
-    def knowledge_base_update(self, visible_world, position, holding_flag):
+    def knowledge_base_update(self, visible_world, position):
         self.knowledge_base_map_update(visible_world, position)
         self.knowledge_base_flag_positions_update()
 
@@ -131,10 +131,9 @@ class Agent:
     def astar_heuristic(self, a, b):
         return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
-    def astar(self, agent_pos, target_pos, map):
-        agent_pos_col, agent_pos_row = agent_pos
-        start = (agent_pos_row, agent_pos_col)
-        goal = target_pos
+    def astar(self, agent_position, target_position, map):
+        start = agent_position
+        goal = target_position
         print(f"\nStart: {start}, Goal: {goal}")
         to_process = []
         heapq.heappush(to_process, (0, start))
@@ -165,54 +164,93 @@ class Agent:
 
         return []
 
+    def convert_position_to_direction(self, curr_pos, next_pos):
+        curr_row, curr_col = curr_pos
+        next_row, next_col = next_pos
+
+        vertical_direction = curr_row - next_row
+        horizontal_direction = curr_col - next_col
+        print(f"\ncurr_pos: {curr_pos},next_pos : {next_pos}")
+        print(f"\ncurr_row: {curr_row},next_row : {next_row},curr_col : {curr_col},next_col : {next_col}")
+        print(f"\nvertical_direction: {vertical_direction},horizontal_direction : {horizontal_direction}")
+        if vertical_direction > 0:
+            return "up"
+        elif vertical_direction < 0:
+            return "down"
+
+        if horizontal_direction > 0:
+            return "left"
+        elif horizontal_direction < 0:
+            return "right"
+
     def update(self, visible_world, position, can_shoot, holding_flag):
+        # Initial values, don't move, don't shoot
         action = None
         direction = None
+        agent_position = position[::-1]
 
-        # flag keeper agent
-        if self.index == 0:
-            print("\n===========================\n")
-            print(f"Color: {self.color},Index: {self.index}, Position: {position}")
-            for row in visible_world:
-                print(" " + " ".join(row))
-            self.knowledge_base_update(visible_world, position, holding_flag)
-            self.knowledge_base_map_display()
-            print(Agent.knowledge_base)
-            if (len(Agent.knowledge_base["home_flag_positions"])):
-                path = self.astar(position, Agent.knowledge_base["home_flag_positions"][-1], Agent.knowledge_base["map"])
-                print("\nPath:", path)
+        # Extracted from knowledge base
+        self.knowledge_base_update(visible_world, position)
+        map = Agent.knowledge_base["map"]
+        home_flag_position = Agent.knowledge_base["home_flag_positions"][-1] if len(Agent.knowledge_base["home_flag_positions"]) else None
+        enemy_flag_position = Agent.knowledge_base["enemy_flag_positions"][-1] if len(Agent.knowledge_base["enemy_flag_positions"]) else None
+        print(f"Home flag {home_flag_position}, {home_flag_position is not None}")
 
-        if self.index == 1 or self.index == 2:
-            nearby_enemies = self.get_nearby_enemies(visible_world)
+        # Get nearby enemy direction by priority
+        nearby_enemies = self.get_nearby_enemies(visible_world)
+        nearby_enemy_direction = nearby_enemies[0]["direction"] if len(nearby_enemies) else None
 
-            if can_shoot and len(nearby_enemies):
-                action = "shoot"
+        if can_shoot and nearby_enemy_direction:
+            action = "shoot"
+            direction = nearby_enemy_direction
+        else:
+            # flag keeper agent
+            if self.index == 0:
+                if enemy_flag_position is not None:
+                    path = self.astar(agent_position, enemy_flag_position, map)
+                    print(f"path: {path}, path len: {len(path)}")
+
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        print(f"next_position: {next_position}")
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                        action = "move"
+                        print("\nDirection:", direction)
+
+                print("\n===========================\n")
+                print(f"Color: {self.color},Index: {self.index}, Position: {position}")
+                for row in visible_world:
+                    print(" " + " ".join(row))
+
+                self.knowledge_base_map_display()
+                print(Agent.knowledge_base)
+
             else:
-                action = "move"
+                if can_shoot and len(nearby_enemies):
+                    action = "shoot"
+                else:
+                    action = "move"
 
-            if self.color == "blue":
-                preferred_direction = "right"
-                if holding_flag:
-                    preferred_direction = "left"
-            elif self.color == "red":
-                preferred_direction = "left"
-                if holding_flag:
+                if self.color == "blue":
                     preferred_direction = "right"
+                    if holding_flag:
+                        preferred_direction = "left"
+                elif self.color == "red":
+                    preferred_direction = "left"
+                    if holding_flag:
+                        preferred_direction = "right"
 
-            r = random.random() * 1.5
-            if r < 0.25:
-                direction = "left"
-            elif r < 0.5:
-                direction = "right"
-            elif r < 0.75:
-                direction = "up"
-            elif r < 1.0:
-                direction = "down"
-            else:
-                direction = preferred_direction
-
-            if action == "shoot":
-                direction = nearby_enemies[0]["direction"]
+                r = random.random() * 1.5
+                if r < 0.25:
+                    direction = "left"
+                elif r < 0.5:
+                    direction = "right"
+                elif r < 0.75:
+                    direction = "up"
+                elif r < 1.0:
+                    direction = "down"
+                else:
+                    direction = preferred_direction
 
         return action, direction
 
