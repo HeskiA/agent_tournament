@@ -166,8 +166,10 @@ class Agent:
         return []
 
     def update(self, visible_world, position, can_shoot, holding_flag):
+        action = None
+        direction = None
 
-        # display one agent's vision:
+        # flag keeper agent
         if self.index == 0:
             print("\n===========================\n")
             print(f"Color: {self.color},Index: {self.index}, Position: {position}")
@@ -180,36 +182,37 @@ class Agent:
                 path = self.astar(position, Agent.knowledge_base["home_flag_positions"][-1], Agent.knowledge_base["map"])
                 print("\nPath:", path)
 
-        nearby_enemies = self.get_nearby_enemies(visible_world)
+        if self.index == 1 or self.index == 2:
+            nearby_enemies = self.get_nearby_enemies(visible_world)
 
-        if can_shoot and len(nearby_enemies):
-            action = "shoot"
-        else:
-            action = "move"
+            if can_shoot and len(nearby_enemies):
+                action = "shoot"
+            else:
+                action = "move"
 
-        if self.color == "blue":
-            preferred_direction = "right"
-            if holding_flag:
-                preferred_direction = "left"
-        elif self.color == "red":
-            preferred_direction = "left"
-            if holding_flag:
+            if self.color == "blue":
                 preferred_direction = "right"
+                if holding_flag:
+                    preferred_direction = "left"
+            elif self.color == "red":
+                preferred_direction = "left"
+                if holding_flag:
+                    preferred_direction = "right"
 
-        r = random.random() * 1.5
-        if r < 0.25:
-            direction = "left"
-        elif r < 0.5:
-            direction = "right"
-        elif r < 0.75:
-            direction = "up"
-        elif r < 1.0:
-            direction = "down"
-        else:
-            direction = preferred_direction
+            r = random.random() * 1.5
+            if r < 0.25:
+                direction = "left"
+            elif r < 0.5:
+                direction = "right"
+            elif r < 0.75:
+                direction = "up"
+            elif r < 1.0:
+                direction = "down"
+            else:
+                direction = preferred_direction
 
-        if action == "shoot":
-            direction = nearby_enemies[0]["direction"]
+            if action == "shoot":
+                direction = nearby_enemies[0]["direction"]
 
         return action, direction
 
