@@ -1,6 +1,7 @@
 # Antonio Heski, Mateo Niksic
-import random
 from config import *
+import random
+import heapq
 
 
 class Agent:
@@ -26,13 +27,13 @@ class Agent:
                 tile = Agent.knowledge_base["map"][row][col]
                 if tile == self.HOME_FLAG_TILE:
                     if not Agent.knowledge_base["home_flag_positions"]:
-                        Agent.knowledge_base["home_flag_positions"].append((col, row))
-                    elif Agent.knowledge_base["home_flag_positions"][-1] != (col, row):
+                        Agent.knowledge_base["home_flag_positions"].append((row, col))
+                    elif Agent.knowledge_base["home_flag_positions"][-1] != (row, col):
                         continue
                 if tile == self.ENEMY_FLAG_TILE:
                     if not Agent.knowledge_base["enemy_flag_positions"]:
-                        Agent.knowledge_base["enemy_flag_positions"].append((col, row))
-                    elif Agent.knowledge_base["enemy_flag_positions"][-1] != (col, row):
+                        Agent.knowledge_base["enemy_flag_positions"].append((row, col))
+                    elif Agent.knowledge_base["enemy_flag_positions"][-1] != (row, col):
                         continue
 
     def update_map(self, visible_world, position):
@@ -59,11 +60,14 @@ class Agent:
 
                     tile = visible_world[vw_row][vw_col]
 
-                    if tile in [ASCII_TILES["empty"],
-                                ASCII_TILES["wall"],
-                                ASCII_TILES["blue_flag"],
-                                ASCII_TILES["red_flag"]]:
-                        Agent.knowledge_base["map"][row][col] = tile
+                    if tile != "/":
+                        if tile in [ASCII_TILES["red_agent"],
+                                    ASCII_TILES["red_agent_f"],
+                                    ASCII_TILES["blue_agent"],
+                                    ASCII_TILES["blue_agent_f"]]:
+                            Agent.knowledge_base["map"][row][col] = ASCII_TILES["empty"]
+                        else:
+                            Agent.knowledge_base["map"][row][col] = tile
 
     def display_map(self):
         print("\n===========================\n")
@@ -111,6 +115,56 @@ class Agent:
 
         return sorted_enemies
 
+    def astar_reconstruct_path(self, processed, start, goal):
+        current = goal
+        path = [current]
+        while current != start:
+            current = processed[current]
+            path.append(current)
+        path.reverse()
+        return path
+
+    def astar_is_valid_neighbor(self, pos, map):
+        row, col = pos
+        return map[row][col] in [ASCII_TILES["empty"], ASCII_TILES["blue_flag"], ASCII_TILES["red_flag"]]
+
+    def astar_heuristic(self, a, b):
+        return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+
+    def astar(self, agent_pos, target_pos, map):
+        agent_pos_col, agent_pos_row = agent_pos
+        start = (agent_pos_row, agent_pos_col)
+        goal = target_pos
+        print(f"\nStart: {start}, Goal: {goal}")
+        to_process = []
+        heapq.heappush(to_process, (0, start))
+
+        processed = {}
+        g_cost = {start: 0}
+
+        while to_process:
+            current_priority, current_pos = heapq.heappop(to_process)
+
+            if current_pos == goal:
+                return self.astar_reconstruct_path(processed, start, goal)
+
+            neighbors = [(current_pos[0] + 1, current_pos[1]),
+                         (current_pos[0] - 1, current_pos[1]),
+                         (current_pos[0], current_pos[1] + 1),
+                         (current_pos[0], current_pos[1] - 1)]
+
+            for neighbor in neighbors:
+                if self.astar_is_valid_neighbor(neighbor, map):
+                    tentative_g_cost = g_cost[current_pos] + 1
+
+                    if neighbor not in g_cost or tentative_g_cost < g_cost[neighbor]:
+                        g_cost[neighbor] = tentative_g_cost
+                        total_cost = tentative_g_cost + self.astar_heuristic(neighbor, goal)
+                        heapq.heappush(to_process, (total_cost, neighbor))
+                        processed[neighbor] = current_pos
+
+        return []
+
     def update(self, visible_world, position, can_shoot, holding_flag):
 
         # display one agent's vision:
@@ -122,6 +176,9 @@ class Agent:
             self.update_knowledge_base(visible_world, position, holding_flag)
             self.display_map()
             print(Agent.knowledge_base)
+            if (len(Agent.knowledge_base["home_flag_positions"])):
+                path = self.astar(position, Agent.knowledge_base["home_flag_positions"][-1], Agent.knowledge_base["map"])
+                print("\nPath:", path)
 
         nearby_enemies = self.detect_nearby_enemies(visible_world)
 
