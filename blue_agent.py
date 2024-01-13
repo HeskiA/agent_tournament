@@ -11,7 +11,7 @@ class Agent:
                  for col in range(WIDTH)]
                 for row in range(HEIGHT)],
         "enemy_flag_positions": [],
-        "home_flag_positions": []
+        "home_flag_positions": [],
     }
 
     def __init__(self, color, index):
@@ -194,6 +194,7 @@ class Agent:
         map = Agent.knowledge_base["map"]
         home_flag_position = Agent.knowledge_base["home_flag_positions"][-1] if len(Agent.knowledge_base["home_flag_positions"]) else None
         enemy_flag_position = Agent.knowledge_base["enemy_flag_positions"][-1] if len(Agent.knowledge_base["enemy_flag_positions"]) else None
+        holding_enemy_flag = True if visible_world[4][4] == self.color[0].upper() else False
         print(f"Home flag {home_flag_position}, {home_flag_position is not None}")
 
         # Get nearby enemy direction by priority
@@ -206,7 +207,15 @@ class Agent:
         else:
             # flag keeper agent
             if self.index == 0:
-                if enemy_flag_position is not None:
+                if holding_enemy_flag:
+                    if home_flag_position is not None:
+                        path = self.astar(agent_position, home_flag_position, map)
+
+                        if len(path) > 1:
+                            next_position = path.pop(1)
+                            direction = self.convert_position_to_direction(agent_position, next_position)
+                            action = "move"
+                elif enemy_flag_position is not None:
                     path = self.astar(agent_position, enemy_flag_position, map)
                     print(f"path: {path}, path len: {len(path)}")
 
