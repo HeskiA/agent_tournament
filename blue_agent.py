@@ -198,11 +198,12 @@ class Agent:
         nearby_enemy_direction = nearby_enemies[0]["direction"] if len(nearby_enemies) else None
 
         if can_shoot and nearby_enemy_direction:
-            # Uncomment after testing and remove pass
+            # Comment / Uncomment for testing purposes, remove pass
             # action = "shoot"
             # direction = nearby_enemy_direction
             pass
         else:
+            # Separate if statement for each agent, e.g. if self.index == 1 (find flag) or index == 2 (kill enemies), etc... for different strategy
             if self.index in [0, 1, 2]:
                 # ==== Console log agent data START ====
                 print("\n===========================\n")
