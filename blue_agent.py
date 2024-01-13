@@ -21,7 +21,7 @@ class Agent:
         self.ENEMY_FLAG_TILE = ASCII_TILES["red_flag"] if self.color == "blue" else ASCII_TILES["blue_flag"]
         self.HOME_FLAG_TILE = ASCII_TILES["blue_flag"] if self.color == "blue" else ASCII_TILES["red_flag"]
 
-    def update_flag_positions(self):
+    def knowledge_base_flag_positions_update(self):
         for row in range(len(Agent.knowledge_base["map"])):
             for col in range(len(Agent.knowledge_base["map"][0])):
                 tile = Agent.knowledge_base["map"][row][col]
@@ -36,7 +36,7 @@ class Agent:
                     elif Agent.knowledge_base["enemy_flag_positions"][-1] != (row, col):
                         continue
 
-    def update_map(self, visible_world, position):
+    def knowledge_base_map_update(self, visible_world, position):
         if visible_world:
             pos_row = position[1]
             pos_col = position[0]
@@ -69,16 +69,16 @@ class Agent:
                         else:
                             Agent.knowledge_base["map"][row][col] = tile
 
-    def display_map(self):
+    def knowledge_base_map_display(self):
         print("\n===========================\n")
         for row in range(len(Agent.knowledge_base["map"])):
             print(" " + " ".join(Agent.knowledge_base["map"][row]) + " ")
 
-    def update_knowledge_base(self, visible_world, position, holding_flag):
-        self.update_map(visible_world, position)
-        self.update_flag_positions()
+    def knowledge_base_update(self, visible_world, position, holding_flag):
+        self.knowledge_base_map_update(visible_world, position)
+        self.knowledge_base_flag_positions_update()
 
-    def detect_nearby_enemies(self, visible_world):
+    def get_nearby_enemies(self, visible_world):
         enemies = []
 
         vertical_direction = [tile[4] for row, tile in enumerate(visible_world) if row != 4]
@@ -173,14 +173,14 @@ class Agent:
             print(f"Color: {self.color},Index: {self.index}, Position: {position}")
             for row in visible_world:
                 print(" " + " ".join(row))
-            self.update_knowledge_base(visible_world, position, holding_flag)
-            self.display_map()
+            self.knowledge_base_update(visible_world, position, holding_flag)
+            self.knowledge_base_map_display()
             print(Agent.knowledge_base)
             if (len(Agent.knowledge_base["home_flag_positions"])):
                 path = self.astar(position, Agent.knowledge_base["home_flag_positions"][-1], Agent.knowledge_base["map"])
                 print("\nPath:", path)
 
-        nearby_enemies = self.detect_nearby_enemies(visible_world)
+        nearby_enemies = self.get_nearby_enemies(visible_world)
 
         if can_shoot and len(nearby_enemies):
             action = "shoot"
