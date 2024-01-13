@@ -170,9 +170,7 @@ class Agent:
 
         vertical_direction = curr_row - next_row
         horizontal_direction = curr_col - next_col
-        print(f"\ncurr_pos: {curr_pos},next_pos : {next_pos}")
-        print(f"\ncurr_row: {curr_row},next_row : {next_row},curr_col : {curr_col},next_col : {next_col}")
-        print(f"\nvertical_direction: {vertical_direction},horizontal_direction : {horizontal_direction}")
+
         if vertical_direction > 0:
             return "up"
         elif vertical_direction < 0:
@@ -185,7 +183,7 @@ class Agent:
 
     def update(self, visible_world, position, can_shoot, holding_flag):
         # Initial values, don't move, don't shoot
-        action = None
+        action = "move"
         direction = None
         agent_position = position[::-1]
 
@@ -194,72 +192,62 @@ class Agent:
         map = Agent.knowledge_base["map"]
         home_flag_position = Agent.knowledge_base["home_flag_positions"][-1] if len(Agent.knowledge_base["home_flag_positions"]) else None
         enemy_flag_position = Agent.knowledge_base["enemy_flag_positions"][-1] if len(Agent.knowledge_base["enemy_flag_positions"]) else None
-        holding_enemy_flag = True if visible_world[4][4] == self.color[0].upper() else False
-        print(f"Home flag {home_flag_position}, {home_flag_position is not None}")
 
         # Get nearby enemy direction by priority
         nearby_enemies = self.get_nearby_enemies(visible_world)
         nearby_enemy_direction = nearby_enemies[0]["direction"] if len(nearby_enemies) else None
 
         if can_shoot and nearby_enemy_direction:
-            action = "shoot"
-            direction = nearby_enemy_direction
+            # Uncomment after testing and remove pass
+            # action = "shoot"
+            # direction = nearby_enemy_direction
+            pass
         else:
-            # flag keeper agent
-            if self.index == 0:
-                if holding_enemy_flag:
-                    if home_flag_position is not None:
-                        path = self.astar(agent_position, home_flag_position, map)
-
-                        if len(path) > 1:
-                            next_position = path.pop(1)
-                            direction = self.convert_position_to_direction(agent_position, next_position)
-                            action = "move"
-                elif enemy_flag_position is not None:
-                    path = self.astar(agent_position, enemy_flag_position, map)
-                    print(f"path: {path}, path len: {len(path)}")
-
-                    if len(path) > 1:
-                        next_position = path.pop(1)
-                        print(f"next_position: {next_position}")
-                        direction = self.convert_position_to_direction(agent_position, next_position)
-                        action = "move"
-                        print("\nDirection:", direction)
-
+            if self.index in [0, 1, 2]:
+                # ==== Console log agent data START ====
                 print("\n===========================\n")
                 print(f"Color: {self.color},Index: {self.index}, Position: {position}")
                 for row in visible_world:
                     print(" " + " ".join(row))
-
                 self.knowledge_base_map_display()
-                print(Agent.knowledge_base)
+                # print(Agent.knowledge_base)
+                # ==== Console log agent data END ====
 
-            else:
-                if can_shoot and len(nearby_enemies):
-                    action = "shoot"
+                # Agent logic to return enemy flag to home flag position
+                if holding_flag:
+                    Agent.knowledge_base["enemy_flag_positions"] = []
+                    path = self.astar(agent_position, home_flag_position, map)
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                # Agent logic to find enemy flag
+                elif enemy_flag_position is not None:
+                    path = self.astar(agent_position, enemy_flag_position, map)
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                # General agent logic
                 else:
-                    action = "move"
-
-                if self.color == "blue":
-                    preferred_direction = "right"
-                    if holding_flag:
-                        preferred_direction = "left"
-                elif self.color == "red":
-                    preferred_direction = "left"
-                    if holding_flag:
+                    if self.color == "blue":
                         preferred_direction = "right"
+                        if holding_flag:
+                            preferred_direction = "left"
+                    elif self.color == "red":
+                        preferred_direction = "left"
+                        if holding_flag:
+                            preferred_direction = "right"
 
-                r = random.random() * 1.5
-                if r < 0.25:
-                    direction = "left"
-                elif r < 0.5:
-                    direction = "right"
-                elif r < 0.75:
-                    direction = "up"
-                elif r < 1.0:
-                    direction = "down"
-                else:
-                    direction = preferred_direction
+                    r = random.random() * 1.5
+                    if r < 0.25:
+                        direction = "left"
+                    elif r < 0.5:
+                        direction = "right"
+                    elif r < 0.75:
+                        direction = "up"
+                    elif r < 1.0:
+                        direction = "down"
+                    else:
+                        direction = preferred_direction
 
         return action, direction
 

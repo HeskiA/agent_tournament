@@ -25,12 +25,12 @@ from config import *  # contains, amongst other variables, `ASCII_TILES` (which 
 
 
 class Agent:
-    
+
     # called when this agent is instanced (at the beginning of the game)
     def __init__(self, color, index):
         self.color = color  # "blue" or "red"
         self.index = index  # 0, 1, or 2
-    
+
     # called every "agent frame"
     def update(self, visible_world, position, can_shoot, holding_flag):
         # display one agent's vision:
@@ -38,14 +38,15 @@ class Agent:
             print("\n===========================\n")
             for row in visible_world:
                 print(" " + " ".join(row))"""
-        
-        ## below is a very random and extremely simple implementation for testing purposes
-        
+
+        # below is a very random and extremely simple implementation for testing purposes
+
         if can_shoot and random.random() > 0.5:
-            action = "shoot"
+            # action = "shoot"
+            action = "move"
         else:
             action = "move"
-            
+
         if self.color == "blue":
             preferred_direction = "right"
             if holding_flag:
@@ -54,7 +55,7 @@ class Agent:
             preferred_direction = "left"
             if holding_flag:
                 preferred_direction = "right"
-        
+
         r = random.random() * 1.5
         if r < 0.25:
             direction = "left"
@@ -66,9 +67,9 @@ class Agent:
             direction = "down"
         else:
             direction = preferred_direction
-            
+
         return action, direction
-    
+
     # called when this agent is deleted (either because this agent died, or because the game is over)
     # `reason` can be "died" or if the game is over "blue", "red", or "tied" depending on who won
     def terminate(self, reason):
