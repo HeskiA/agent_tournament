@@ -2,6 +2,7 @@
 from config import *
 import random
 import heapq
+import math
 
 
 class Agent:
@@ -12,6 +13,7 @@ class Agent:
                 for row in range(HEIGHT)],
         "enemy_flag_positions": [],
         "home_flag_positions": [],
+        "friendly_agents_alive": 3
     }
 
     def __init__(self, color, index):
@@ -181,6 +183,13 @@ class Agent:
         elif horizontal_direction < 0:
             return "right"
 
+    def euclidean_distance(self, point1, point2):
+        x1, y1 = point1
+        x2, y2 = point2
+
+        distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        return distance
+
     def update(self, visible_world, position, can_shoot, holding_flag):
         # Initial values, don't move, don't shoot
         action = "move"
@@ -199,8 +208,8 @@ class Agent:
 
         if can_shoot and nearby_enemy_direction:
             # Comment / Uncomment for testing purposes, remove pass
-            # action = "shoot"
-            # direction = nearby_enemy_direction
+            action = "shoot"
+            direction = nearby_enemy_direction
             pass
         else:
             # Separate if statement for each agent, e.g. if self.index == 1 (find flag) or index == 2 (kill enemies), etc... for different strategy
@@ -249,9 +258,24 @@ class Agent:
                         direction = "down"
                     else:
                         direction = preferred_direction
-
+        if self.index == 0 and Agent.knowledge_base["friendly_agents_alive"] > 1:
+            if self.euclidean_distance(agent_position, home_flag_position) > 1:
+                print("Moving to guard home flag...")
+                path = self.astar(agent_position, home_flag_position, map)
+                if len(path) > 1:
+                    next_position = path.pop(1)
+                    direction = self.convert_position_to_direction(agent_position, next_position)
+            else:
+                print("Guarding home flag!")
+                action = "move"
+                direction = None
+            
         return action, direction
+
+
 
     def terminate(self, reason):
         if reason == "died":
+            Agent.knowledge_base["friendly_agents_alive"] -= 1
             print(self.color, self.index, "died")
+            print(f"{self.color} agents left: ", Agent.knowledge_base["friendly_agents_alive"])
