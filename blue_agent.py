@@ -14,7 +14,9 @@ class Agent:
         "enemy_flag_positions": [],
         "home_flag_positions": [],
         "friendly_agents_alive": 3,
-        "visited": []
+        "visited": [],
+        "enemy_flag_captured": False,
+        "friendly_capturer_position": (1, 1)
     }
 
     def __init__(self, color, index):
@@ -208,7 +210,7 @@ class Agent:
         nearby_enemies = self.get_nearby_enemies(visible_world)
         nearby_enemy_direction = nearby_enemies[0]["direction"] if len(nearby_enemies) else None
 
-        if can_shoot and nearby_enemy_direction and 2 == 1:
+        if can_shoot and nearby_enemy_direction:
             # Comment / Uncomment for testing purposes, remove pass
             action = "shoot"
             direction = nearby_enemy_direction
@@ -239,7 +241,18 @@ class Agent:
                 # Agent logic to return enemy flag to home flag position
                 if holding_flag:
                     Agent.knowledge_base["enemy_flag_positions"] = []
+                    Agent.knowledge_base["enemy_flag_captured"] = True
+                    Agent.knowledge_base["friendly_capturer_position"] = agent_position
+
                     path = self.astar(agent_position, home_flag_position, map)
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                # Agent logic to regroup with the flag capturer
+                elif not holding_flag and Agent.knowledge_base["enemy_flag_captured"]:
+                    target = Agent.knowledge_base["friendly_capturer_position"]
+                    target_position = (target[0] + 1, target[1])
+                    path = self.astar(agent_position, target_position, map)
                     if len(path) > 1:
                         next_position = path.pop(1)
                         direction = self.convert_position_to_direction(agent_position, next_position)
