@@ -213,7 +213,18 @@ class Agent:
             pass
         else:
             # Separate if statement for each agent, e.g. if self.index == 1 (find flag) or index == 2 (kill enemies), etc... for different strategy
-            if self.index in [0, 1, 2]:
+            if self.index == 0 and Agent.knowledge_base["friendly_agents_alive"] > 1:
+                if self.euclidean_distance(agent_position, home_flag_position) > 1:
+                    print("Moving to guard home flag...")
+                    path = self.astar(agent_position, home_flag_position, map)
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                else:
+                    print("Guarding home flag!")
+                    action = "move"
+                    direction = None            
+            else:
                 # ==== Console log agent data START ====
                 print("\n===========================\n")
                 print(f"Color: {self.color},Index: {self.index}, Position: {position}")
@@ -258,17 +269,7 @@ class Agent:
                         direction = "down"
                     else:
                         direction = preferred_direction
-        if self.index == 0 and Agent.knowledge_base["friendly_agents_alive"] > 1:
-            if self.euclidean_distance(agent_position, home_flag_position) > 1:
-                print("Moving to guard home flag...")
-                path = self.astar(agent_position, home_flag_position, map)
-                if len(path) > 1:
-                    next_position = path.pop(1)
-                    direction = self.convert_position_to_direction(agent_position, next_position)
-            else:
-                print("Guarding home flag!")
-                action = "move"
-                direction = None
+
             
         return action, direction
 
