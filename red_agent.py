@@ -270,7 +270,7 @@ class Agent:
                     else:
                         direction = preferred_direction
 
-            
+        action = None
         return action, direction
 
 
