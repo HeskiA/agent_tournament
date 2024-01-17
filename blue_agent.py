@@ -16,7 +16,8 @@ class Agent:
         "friendly_agents_alive": 3,
         "visited": [],
         "enemy_flag_captured": False,
-        "friendly_capturer_position": (1, 1)
+        "friendly_capturer_position": (1, 1),
+        "shot_fired": {0: False, 1: False, 2: False}
     }
 
     def __init__(self, color, index):
@@ -213,6 +214,7 @@ class Agent:
         if can_shoot and nearby_enemy_direction:
             # Comment / Uncomment for testing purposes, remove pass
             action = "shoot"
+            Agent.knowledge_base["shot_fired"][self.index] = True
             direction = nearby_enemy_direction
             pass
         else:
@@ -230,11 +232,11 @@ class Agent:
                     direction = None            
             else:
                 # ==== Console log agent data START ====
-                print("\n===========================\n")
-                print(f"Color: {self.color},Index: {self.index}, Position: {position}")
-                for row in visible_world:
-                    print(" " + " ".join(row))
-                self.knowledge_base_map_display()
+                #print("\n===========================\n")
+                #print(f"Color: {self.color},Index: {self.index}, Position: {position}")
+                #for row in visible_world:
+                #    print(" " + " ".join(row))
+                #self.knowledge_base_map_display()
                 # print(Agent.knowledge_base)
                 # ==== Console log agent data END ====
 

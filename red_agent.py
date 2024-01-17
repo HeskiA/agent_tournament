@@ -13,7 +13,11 @@ class Agent:
                 for row in range(HEIGHT)],
         "enemy_flag_positions": [],
         "home_flag_positions": [],
-        "friendly_agents_alive": 3
+        "friendly_agents_alive": 3,
+        "visited": [],
+        "enemy_flag_captured": False,
+        "friendly_capturer_position": (1, 1),
+        "shot_fired": {0: False, 1: False, 2: False}
     }
 
     def __init__(self, color, index):
@@ -195,6 +199,7 @@ class Agent:
         action = "move"
         direction = None
         agent_position = position[::-1]
+        Agent.knowledge_base["visited"].append(agent_position)
 
         # Extracted from knowledge base
         self.knowledge_base_update(visible_world, position)
@@ -209,6 +214,7 @@ class Agent:
         if can_shoot and nearby_enemy_direction:
             # Comment / Uncomment for testing purposes, remove pass
             action = "shoot"
+            Agent.knowledge_base["shot_fired"][self.index] = True
             direction = nearby_enemy_direction
             pass
         else:
@@ -226,18 +232,29 @@ class Agent:
                     direction = None            
             else:
                 # ==== Console log agent data START ====
-                print("\n===========================\n")
-                print(f"Color: {self.color},Index: {self.index}, Position: {position}")
-                for row in visible_world:
-                    print(" " + " ".join(row))
-                self.knowledge_base_map_display()
+                #print("\n===========================\n")
+                #print(f"Color: {self.color},Index: {self.index}, Position: {position}")
+                #for row in visible_world:
+                #    print(" " + " ".join(row))
+                #self.knowledge_base_map_display()
                 # print(Agent.knowledge_base)
                 # ==== Console log agent data END ====
 
                 # Agent logic to return enemy flag to home flag position
                 if holding_flag:
                     Agent.knowledge_base["enemy_flag_positions"] = []
+                    Agent.knowledge_base["enemy_flag_captured"] = True
+                    Agent.knowledge_base["friendly_capturer_position"] = agent_position
+
                     path = self.astar(agent_position, home_flag_position, map)
+                    if len(path) > 1:
+                        next_position = path.pop(1)
+                        direction = self.convert_position_to_direction(agent_position, next_position)
+                # Agent logic to regroup with the flag capturer
+                elif not holding_flag and Agent.knowledge_base["enemy_flag_captured"]:
+                    target = Agent.knowledge_base["friendly_capturer_position"]
+                    target_position = (target[0] + 1, target[1])
+                    path = self.astar(agent_position, target_position, map)
                     if len(path) > 1:
                         next_position = path.pop(1)
                         direction = self.convert_position_to_direction(agent_position, next_position)
@@ -249,28 +266,29 @@ class Agent:
                         direction = self.convert_position_to_direction(agent_position, next_position)
                 # General agent logic, implement logic to explore tiles to find enemy flag position faster
                 else:
-                    if self.color == "blue":
-                        preferred_direction = "right"
-                        if holding_flag:
-                            preferred_direction = "left"
-                    elif self.color == "red":
-                        preferred_direction = "left"
-                        if holding_flag:
-                            preferred_direction = "right"
-
-                    r = random.random() * 1.5
-                    if r < 0.25:
-                        direction = "left"
-                    elif r < 0.5:
-                        direction = "right"
-                    elif r < 0.75:
-                        direction = "up"
-                    elif r < 1.0:
-                        direction = "down"
-                    else:
-                        direction = preferred_direction
-
-        #action = None
+                    if not Agent.knowledge_base["enemy_flag_positions"]:
+                        # Explore the map
+                        unvisited_positions = [(row, col) for row in range(1, HEIGHT - 1) for col in range(1, WIDTH - 1) if (row, col) not in Agent.knowledge_base["visited"]]
+                        if unvisited_positions:
+                            rever = True # If we are team blue, agents will go towards the right hand side
+                            if self.color == "red": # If we are team red, agents will go towards the left
+                                rever = False
+                            unvisited_positions = sorted(unvisited_positions, key=lambda x: x[1], reverse=rever)
+                            target_position = None
+                            for el in unvisited_positions:
+                                if Agent.knowledge_base["map"][el[0]][el[1]] == ASCII_TILES["empty"]:
+                                    if self.astar(agent_position, el, map) != []:
+                                        target_position = el
+                                        break
+                            print("target positioooon ", target_position)
+                            path = self.astar(agent_position, target_position, map)
+                            print("krecem do ", path)
+                            if len(path) > 1:
+                                next_position = path.pop(1)
+                                direction = self.convert_position_to_direction(agent_position, next_position)
+                        else:
+                            Agent.knowledge_base["visited"] = []
+           
         return action, direction
 
 
