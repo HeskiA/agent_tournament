@@ -215,6 +215,8 @@ class Agent:
         if can_shoot and nearby_enemy_direction:
             # Comment / Uncomment for testing purposes, remove pass
             action = "shoot"
+            if Agent.knowledge_base["shot_fired"][self.index]:
+                Agent.knowledge_base["shot_fired"][self.index] = False 
             Agent.knowledge_base["shot_fired"][self.index] = True
             direction = nearby_enemy_direction
             pass
