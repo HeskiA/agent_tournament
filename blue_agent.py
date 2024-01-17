@@ -17,7 +17,8 @@ class Agent:
         "visited": [],
         "enemy_flag_captured": False,
         "friendly_capturer_position": (1, 1),
-        "shot_fired": {0: False, 1: False, 2: False}
+        "shot_fired": {0: False, 1: False, 2: False},
+        "home_flag_captured": False
     }
 
     def __init__(self, color, index):
@@ -241,15 +242,17 @@ class Agent:
                 # ==== Console log agent data END ====
 
                 # Agent logic to return enemy flag to home flag position
-                if holding_flag:
+                if holding_flag and home_flag_position:
                     Agent.knowledge_base["enemy_flag_positions"] = []
                     Agent.knowledge_base["enemy_flag_captured"] = True
                     Agent.knowledge_base["friendly_capturer_position"] = agent_position
-
+                    
                     path = self.astar(agent_position, home_flag_position, map)
                     if len(path) > 1:
                         next_position = path.pop(1)
                         direction = self.convert_position_to_direction(agent_position, next_position)
+                    if agent_position == home_flag_position: # if agent has returned home, but there is no home flag
+                        home_flag_position = None # no home flag, therefore agent goes back to exploring
                 # Agent logic to regroup with the flag capturer
                 elif not holding_flag and Agent.knowledge_base["enemy_flag_captured"]:
                     target = Agent.knowledge_base["friendly_capturer_position"]
