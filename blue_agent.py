@@ -278,6 +278,13 @@ class Agent:
                                     if self.astar(agent_position, el, map) != []:
                                         target_position = el
                                         break
+                            if self.index == 2:
+                                unvisited_positions = sorted(unvisited_positions, key=lambda x: x[0], reverse=True)
+                                for el in unvisited_positions:
+                                    if el[1] == target_position[1] and Agent.knowledge_base["map"][el[0]][el[1]] == ASCII_TILES["empty"]:
+                                        if self.astar(agent_position, el, map) != []:
+                                            target_position = el
+                                        break
                             print("target positioooon ", target_position)
                             path = self.astar(agent_position, target_position, map)
                             print("krecem do ", path)
