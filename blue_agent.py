@@ -254,7 +254,9 @@ class Agent:
                         next_position = path.pop(1)
                         direction = self.convert_position_to_direction(agent_position, next_position)
                     if agent_position == home_flag_position: # if agent has returned home, but there is no home flag
-                        home_flag_position = None # no home flag, therefore agent goes back to exploring
+                        print("NO FLAG FOUND")
+                        Agent.knowledge_base["home_flag_positions"] = [] # no home flag, therefore agent goes back to exploring
+                        Agent.knowledge_base["enemy_flag_positions"] = []
                 # Agent logic to regroup with the flag capturer
                 elif not holding_flag and Agent.knowledge_base["enemy_flag_captured"]:
                     target = Agent.knowledge_base["friendly_capturer_position"]
