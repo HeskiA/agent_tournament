@@ -9,6 +9,9 @@ zastave koju brani, a preostala dva agenta istrazuju mapu kako bi
 doznali gdje je neprijateljska zastava.
 3.) Kada agent pokupi zastavu od neprijatelja, drugi agent ako je ziv
 se regrupira te ga prati da sigurno odnese zastavu na cilj.
+4.) Ako je neprijatelj uzeo domaću zastavu, a agent se kreće prema
+cilju ili domaćoj zastavi kada shvati da nema zastave agent se vraca
+na poziciju neprijateljske zastave.
 4.) A* algoritam za pronalazak najkraceg puta do zastave i nazad.
 5.) Kada agent detektira neprijatelja u svom vidljivom podrucju koristi
 algoritam za sortiranje neprijatelja na kojeg ce pucati prema prioritetu.
